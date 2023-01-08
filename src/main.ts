@@ -6,9 +6,10 @@ let tileWidth = 0;
 setSizes();
 let snake = [{x: tileWidth * 5, y: tileWidth * 7}, {x: tileWidth * 4, y: tileWidth * 7}, {x: tileWidth * 3, y: tileWidth * 7}];
 let timer: number | undefined;
+let prevDirection: string;
 let direction = "Right";
 let food = [50000, 50000];
-let collors = ["#220060", "#220099", "green", "orange"]
+let collors = ["#220060", "#220099", "green", "orange"];
 let dead = false;
 let velocity = 7; // Tiles per second
 let maxScore = 0;
@@ -28,13 +29,11 @@ function setSizes() {
       canvas.height = i;
       tileWidth = i / 15;
     }
-    console.log(canvas.height)
-    console.log(tileWidth)
   }
 }
 
-function setTimer(meterPerSecond: number) {
-  const time = 1000 / meterPerSecond;
+function setTimer(tilesPerSecond: number) {
+  const time = 1000 / tilesPerSecond;
   if (dead == false) {
     timer = setTimeout(() => callback(), time);
   }
@@ -45,6 +44,7 @@ function stopTimer() {
 }
 
 function callback() {
+  prevDirection = direction;
   moveSnake();
   checkDeathHit();
   checkFruitHit();
@@ -82,9 +82,9 @@ function buildSnake() {
 
   for(let i = 0; i < snake.length; i++){
     context.fillStyle = collors[2];
+    context.strokeStyle = "black";
     context.fillRect(snake[i].x, snake[i].y, tileWidth, tileWidth);
-    context.fillStyle = "black";
-    context.strokeRect(snake[i].x, snake[i].y, tileWidth, tileWidth)
+    context.strokeRect(snake[i].x, snake[i].y, tileWidth, tileWidth);
   }
 }
 
@@ -94,7 +94,7 @@ function buildFood() {
 
   context.fillStyle = collors[3];
   context.fillRect(food[0], food[1], tileWidth, tileWidth);
-  context.fillStyle = 'black';
+  context.strokeStyle = 'black';
   context.strokeRect(food[0], food[1], tileWidth, tileWidth);
 }
 
@@ -111,35 +111,35 @@ function listenActions(){
   body.addEventListener('keydown', e => {
     switch(e.key) {
       case "ArrowUp":
-        if (direction == "Down") break;
+        if (direction == "Down" || prevDirection == "Down") break;
         direction = "Up";
         break;
       case "ArrowDown":
-        if (direction == "Up") break;
+        if (direction == "Up" || prevDirection == "Up") break;
         direction = "Down";
         break;
       case "ArrowLeft":
-        if (direction == "Right") break;
+        if (direction == "Right" || prevDirection == "Right") break;
         direction = "Left";
         break;
       case "ArrowRight":
-        if (direction == "Left") break;
+        if (direction == "Left" || prevDirection == "Left") break;
         direction = "Right";
         break;
       case "w":
-        if (direction == "Down") break;
+        if (direction == "Down" || prevDirection == "Down") break;
         direction = "Up";
         break;
       case "s":
-        if (direction == "Up") break;
+        if (direction == "Up" || prevDirection == "Up") break;
         direction = "Down";
         break;
       case "a":
-        if (direction == "Right") break;
+        if (direction == "Right" || prevDirection == "Right") break;
         direction = "Left";
         break;
       case "d":
-        if (direction == "Left") break;
+        if (direction == "Left" || prevDirection == "Left") break;
         direction = "Right";
         break;
       case " ":
@@ -150,16 +150,16 @@ function listenActions(){
 
   const restartButton = document.querySelector('#restart');
   if(!restartButton) return;
-  restartButton.addEventListener('click', () => restart())
+  restartButton.addEventListener('click', () => restart());
 }
 
 function moveSnake() {
   switch(direction) {
     case "Up":
-      snake.unshift({x: snake[0].x, y: snake[0].y -tileWidth});
+      snake.unshift({x: snake[0].x, y: snake[0].y - tileWidth});
       break;
     case "Down":
-      snake.unshift({x: snake[0].x, y: snake[0].y +tileWidth});
+      snake.unshift({x: snake[0].x, y: snake[0].y + tileWidth});
       break;
     case "Left":
       snake.unshift({x: snake[0].x - tileWidth, y: snake[0].y});
@@ -173,22 +173,22 @@ function moveSnake() {
 
 function createFood() {
   if (food[0] == 50000 && food[1] == 50000)  {
-    let random = newRandomNum();
+    let random = Math.floor(Math.random() * 15);
     for(let i = 0; i < snake.length; i ++) {
       if(random * tileWidth == snake[i].x) {
-        i = 0
-        random = newRandomNum();
+        i = 0;
+        random = Math.floor(Math.random() * 15);
       } else { 
-        food = [random * tileWidth, food[1]]
+        food = [random * tileWidth, food[1]];
       }
     }
-    random = newRandomNum();
+    random = Math.floor(Math.random() * 15);
     for(let i = 0; i < snake.length; i ++) {
       if(random * tileWidth == snake[i].y) {
-        i = 0
-        random = newRandomNum();
+        i = 0;
+        random = Math.floor(Math.random() * 15);
       } else { 
-        food = [food[0], random * tileWidth]
+        food = [food[0], random * tileWidth];
       }
     }
   }
@@ -198,7 +198,7 @@ function checkFruitHit() {
   if(snake[0].x == food[0] && snake[0].y == food[1]) {
     food = [50000, 50000];
     score++;
-    snake.push({x: 50000, y: 50000})
+    snake.push({x: 50000, y: 50000});
   }
 }
 
@@ -213,15 +213,11 @@ function checkDeathHit() {
   }
 }
 
-function newRandomNum() {
-  return Math.floor(Math.random() * 15)
-}
-
 function restart() {
   stopTimer();
   snake = [{x: tileWidth * 5, y: tileWidth * 7}, {x: tileWidth * 4, y: tileWidth * 7}, {x: tileWidth * 3, y: tileWidth * 7}];
-  direction = "Right";
   food = [50000, 50000];
+  direction = "Right";
   dead = false;
   score = 0;
   callback();
